@@ -56,11 +56,11 @@ class browser(BrowserInterface):
         if self.proxy is not None:
             if "@" in self.proxy:
                 server_prefix = self.proxy.split("://")[0]
-                address = self.proxy.split("@")[1]
+                (username, password, address) = re.findall(r":\/\/(.+?):(.+)@(.+)", self.proxy)[0]
                 self.options["proxy"] = {
                     "server": server_prefix + "://" + address,
-                    "username": self.proxy.split("://")[1].split(":")[0],
-                    "password": self.proxy.split("://")[1].split("@")[0].split(":")[1],
+                    "username": username,
+                    "password": password,
                 }
             else:
                 self.options["proxy"] = {"server": self.proxy}
@@ -251,6 +251,30 @@ class browser(BrowserInterface):
         else:
             return None
 
+    async def get_cookies_from_page_url(self, url, **kwargs):
+        
+        self.browser = await self.playwright.webkit.launch(
+            args=self.args, **self.options
+        )
+        context = await self._create_context(set_useragent=True)
+        page = await context.new_page()
+        await page.goto(url)
+        # verify = page.locator('class=captcha_verify_container') 
+        cookies = await context.cookies() 
+        context.close()
+        return cookies
+    async def test_proxy_ip(self, **kwargs):
+        
+        self.browser = await self.playwright.webkit.launch(
+            args=self.args, **self.options
+        )
+        context = await self._create_context(set_useragent=True)
+        page = await context.new_page()
+        await page.goto("https://ipinfo.io/json")
+        # verify = page.locator('class=captcha_verify_container') 
+        response = await page.content()
+        context.close()
+        return response
     def __get_js(self):
         return requests.get(
             "https://sf16-muse-va.ibytedtos.com/obj/rc-web-sdk-gcs/acrawler.js",

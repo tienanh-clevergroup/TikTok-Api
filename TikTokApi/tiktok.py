@@ -298,6 +298,7 @@ class TikTokApi:
             url,
             headers={"x-secsdk-csrf-version": "1.2.5", "x-secsdk-csrf-request": "1"},
             proxies=self._format_proxy(processed.proxy),
+            timeout=10.0,
             **self._requests_extra_kwargs,
         )
 
@@ -402,11 +403,11 @@ class TikTokApi:
             "sec-gpc": "1",
         }
         self.logger.debug(f"GET: %s\n\theaders: %s", full_url, headers)
-
+        cookies = self._get_cookies(**kwargs)
         r = requests.get(
             full_url,
             headers=headers,
-            cookies=self._get_cookies(**kwargs),
+            cookies=cookies,
             proxies=self._format_proxy(processed.proxy),
             **self._requests_extra_kwargs,
         )
